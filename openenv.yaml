@@ -1,0 +1,42 @@
+name: digital-behavior-coach
+version: "1.0.0"
+description: >
+  A reinforcement learning environment that simulates coaching a user
+  toward healthier digital habits. The agent observes screen usage
+  patterns and takes actions to optimize long-term wellbeing.
+
+observation_space:
+  hour_of_day: integer (0-23)
+  screen_time_today: float (hours)
+  app_category: string (social|work|entertainment)
+  user_goal: string (focus|sleep|balance)
+  streak_days: integer
+  last_action_effect: string
+  resistance_level: float (0.0-1.0)
+  habit_score: float (0.0-1.0)
+
+action_space:
+  action_type: string (send_reminder|block_app|encourage|do_nothing)
+  message: string (optional)
+
+reward_range: [0.0, 1.0]
+
+tasks:
+  - id: easy
+    name: "Remind Over-User"
+    description: "Reduce screen time for a user exceeding 5 hours"
+    difficulty: easy
+  - id: medium
+    name: "Late Night Sleep Intervention"
+    description: "Help a user with sleep goal disengage late at night"
+    difficulty: medium
+  - id: hard
+    name: "Full Day Balance"
+    description: "Maintain healthy habits across a full day without over-intervening"
+    difficulty: hard
+
+tags:
+  - digital-health
+  - behavior-coaching
+  - reinforcement-learning
+  - screen-time
