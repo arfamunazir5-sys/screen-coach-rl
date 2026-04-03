@@ -1,48 +1,132 @@
-import gymnasium as gym
-import numpy as np
+from pydantic import BaseModel
+from typing import Optional
+import random
 
-class ScreenCoachEnv(gym.Env):
+class Observation(BaseModel):
+    hour_of_day: int
+    screen_time_today: float
+    app_category: str
+    user_goal: str
+    streak_days: int
+    last_action_effect: str
+    resistance_level: float
+    habit_score: float
+
+class Action(BaseModel):
+    action_type: str
+    message: Optional[str] = ""
+
+class Reward(BaseModel):
+    value: float
+    reason: str
+
+class DigitalCoachEnv:
     def __init__(self):
-        # What the AI can SEE (the situation)
-        # [hour of day, screen time used, user goal, streak count]
-        self.observation_space = gym.spaces.Box(
-            low=np.array([0, 0, 0, 0]),
-            high=np.array([23, 480, 3, 30]),
-            dtype=np.float32
-        )
+        self.state_data = {}
+        self.step_count = 0
+        self.max_steps = 20
+        self.consecutive_reminders = 0
+        self.habit_history = []
 
-        # What the AI can DO (4 choices)
-        # 0 = do nothing, 1 = send reminder
-        # 2 = block app, 3 = send praise
-        self.action_space = gym.spaces.Discrete(4)
+    def reset(self) -> Observation:
+        self.step_count = 0
+        self.consecutive_reminders = 0
+        past_avg = sum(self.habit_history[-7:]) / len(self.habit_history[-7:]) if self.habit_history else 4.0
+        self.state_data = {
+            "hour_of_day": random.randint(8, 22),
+            "screen_time_today": round(min(12.0, past_avg + random.uniform(-1.0, 1.0)), 1),
+            "app_category": random.choice(["social", "entertainment", "work"]),
+            "user_goal": random.choice(["focus", "sleep", "balance"]),
+            "streak_days": random.randint(0, 7),
+            "last_action_effect": "none",
+            "resistance_level": round(random.uniform(0.0, 0.3), 2),
+            "habit_score": round(max(0.0, 1.0 - (past_avg / 12.0)), 2)
+        }
+        return Observation(**self.state_data)
 
-    def reset(self):
-        # Start a new day for the user
-        self.hour = 8          # 8am
-        self.screen_time = 0   # no usage yet
-        self.user_goal = 1     # 1 = focus goal
-        self.streak = 0        # no streak yet
-        return self._get_state(), {}
+    def step(self, action: Action):
+        self.step_count += 1
+        obs, reward_val, reason = self._apply_action(action)
+        self.habit_history.append(self.state_data["screen_time_today"])
+        done = self.step_count >= self.max_steps
+        reward = Reward(value=reward_val, reason=reason)
+        info = {"step": self.step_count}
+        return obs, reward, done, info
 
-    def _get_state(self):
-        return np.array([
-            self.hour,
-            self.screen_time,
-            self.user_goal,
-            self.streak
-        ], dtype=np.float32)
+    def state(self) -> dict:
+        return self.state_data
 
-    def step(self, action):
-        # Simulate one hour passing
-        self.hour += 1
+    def _apply_action(self, action: Action):
+        hour = self.state_data["hour_of_day"]
+        screen_time = self.state_data["screen_time_today"]
+        goal = self.state_data["user_goal"]
+        resistance = self.state_data["resistance_level"]
+        reward = 0.0
+        reason = ""
 
-        # User randomly uses screen (we simulate this)
-        usage = np.random.randint(10, 60)
+        ignored = random.random() < resistance
 
-        # If AI blocked the app, usage is reduced
-        if action == 2:
-            usage = usage * 0.3
+        if action.action_type == "send_reminder":
+            self.consecutive_reminders += 1
+            if self.consecutive_reminders > 2:
+                self.state_data["resistance_level"] = min(1.0, resistance + 0.1)
+                reward = 0.1
+                reason = "User ignoring repeated reminders, resistance increased"
+            elif ignored:
+                reward = 0.15
+                reason = "Reminder ignored due to user resistance"
+            elif screen_time > 4.0:
+                self.state_data["screen_time_today"] = max(0, screen_time - 0.5)
+                reward = 0.6
+                reason = "Reminder helped reduce screen time"
+            else:
+                reward = 0.2
+                reason = "Reminder sent but screen time was already low"
+            self.state_data["last_action_effect"] = "reminder_sent"
 
-        self.screen_time += usage
-        done = self.hour >= 23  # day ends at 11pm
-        return self._get_state(), 0, done, False, {}
+        elif action.action_type == "block_app":
+            self.consecutive_reminders = 0
+            if ignored:
+                reward = 0.2
+                reason = "Block attempt resisted by user"
+            elif screen_time > 6.0:
+                self.state_data["screen_time_today"] = max(0, screen_time - 1.0)
+                self.state_data["resistance_level"] = max(0.0, resistance - 0.05)
+                reward = 0.8
+                reason = "App blocked during heavy usage"
+            else:
+                reward = 0.1
+                reason = "App blocked unnecessarily"
+            self.state_data["last_action_effect"] = "app_blocked"
+
+        elif action.action_type == "encourage":
+            self.consecutive_reminders = 0
+            if self.state_data["streak_days"] > 3:
+                self.state_data["streak_days"] += 1
+                self.state_data["resistance_level"] = max(0.0, resistance - 0.05)
+                reward = 0.7
+                reason = "Encouragement boosted existing streak"
+            else:
+                reward = 0.3
+                reason = "Encouragement given but streak was short"
+            self.state_data["last_action_effect"] = "encouraged"
+
+        elif action.action_type == "do_nothing":
+            self.consecutive_reminders = 0
+            if screen_time < 3.0:
+                reward = 0.5
+                reason = "Correctly did nothing, usage was healthy"
+            else:
+                reward = 0.0
+                reason = "Did nothing during high usage"
+            self.state_data["last_action_effect"] = "no_action"
+
+        if goal == "sleep" and hour >= 22 and action.action_type != "do_nothing":
+            reward = min(1.0, reward + 0.2)
+            reason += " + late night sleep bonus"
+
+        self.state_data["hour_of_day"] = min(23, hour + 1)
+        self.state_data["habit_score"] = round(max(0.0, 1.0 - (self.state_data["screen_time_today"] / 12.0)), 2)
+        return Observation(**self.state_data), round(reward, 2), reason
+
+env = DigitalCoachEnv()

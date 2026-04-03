@@ -1,24 +1,22 @@
-def calculate_reward(action, screen_time, hour, streak):
-    reward = 0
+from environment import DigitalCoachEnv, Action
 
-    # Bad: too much screen time
-    if screen_time > 240:  # more than 4 hours
-        reward -= 2
+def calculate_reward(screen_time: float, action_type: str, goal: str, hour: int) -> float:
+    base = 0.0
 
-    # Good: blocking app during late night
-    if action == 2 and hour >= 22:
-        reward += 3
+    if action_type == "block_app" and screen_time > 6.0:
+        base = 0.8
+    elif action_type == "send_reminder" and screen_time > 4.0:
+        base = 0.6
+    elif action_type == "encourage":
+        base = 0.4
+    elif action_type == "do_nothing" and screen_time < 3.0:
+        base = 0.5
+    else:
+        base = 0.1
 
-    # Good: sending reminder before it gets bad
-    if action == 1 and screen_time > 180:
-        reward += 2
+    if goal == "sleep" and hour >= 22:
+        base = min(1.0, base + 0.2)
+    elif goal == "focus" and action_type == "block_app":
+        base = min(1.0, base + 0.15)
 
-    # Good: maintaining a streak
-    if streak > 3:
-        reward += 1
-
-    # Bad: doing nothing when usage is very high
-    if action == 0 and screen_time > 300:
-        reward -= 3
-
-    return reward
+    return round(base, 2)
