@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+pydantic
+openai
+huggingface_hub
+PyYAML
