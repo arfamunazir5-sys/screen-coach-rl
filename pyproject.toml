@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "screen-coach-rl"
+version = "1.0.0"
+description = "Digital Behavior Coach OpenEnv Environment"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "openai",
+    "huggingface_hub",
+    "PyYAML",
+]
