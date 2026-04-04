@@ -80,14 +80,6 @@ def task_hard() -> float:
         return min(1.0, (total_reward / (steps * 0.55)) + streak_bonus)
 
     return run_task("Hard: Full Day Balance", scenario, actions, success)
-
-
-if __name__ == "__main__":
-    scores = {
-        "easy": task_easy(),
-        "medium": task_medium(),
-        "hard": task_hard()
-    }
     if __name__ == "__main__":
         scores = {
             "easy": task_easy(),
