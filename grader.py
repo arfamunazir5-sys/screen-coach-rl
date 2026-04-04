@@ -80,11 +80,34 @@ def task_hard() -> float:
         return min(1.0, (total_reward / (steps * 0.55)) + streak_bonus)
 
     return run_task("Hard: Full Day Balance", scenario, actions, success)
+    def task_expert() -> float:
+    scenario = {
+        "hour_of_day": 20,
+        "screen_time_today": 7.5,
+        "app_category": "social",
+        "user_goal": "sleep",
+        "streak_days": 0,
+        "last_action_effect": "none",
+        "resistance_level": 0.5,
+        "habit_score": 0.2
+    }
+    actions = [
+        "block_app", "send_reminder", "encourage",
+        "block_app", "do_nothing", "send_reminder",
+        "encourage", "block_app", "encourage", "do_nothing"
+    ]
+
+    def success(total_reward, steps, final_state):
+        resistance_penalty = final_state["resistance_level"] * 0.2
+        return min(1.0, (total_reward / (steps * 0.6)) - resistance_penalty)
+
+    return run_task("Expert: High Resistance Night User", scenario, actions, success)
     if __name__ == "__main__":
-        scores = {
-            "easy": task_easy(),
-            "medium": task_medium(),
-            "hard": task_hard()
+    scores = {
+        "easy": task_easy(),
+        "medium": task_medium(),
+        "hard": task_hard(),
+        "expert": task_expert()
     }
     print("=== GRADER RESULTS ===")
     for k, v in scores.items():
