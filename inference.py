@@ -5,7 +5,7 @@ from environment import DigitalCoachEnv, Action, Observation
 
 API_BASE_URL = os.environ.get("API_BASE_URL", "https://api.groq.com/openai/v1")
 MODEL_NAME = os.environ.get("MODEL_NAME", "llama-3.1-8b-instant")
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "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")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 HF_TOKEN = os.environ.get("HF_TOKEN", "")
 client = OpenAI(api_key=OPENAI_API_KEY, base_url=API_BASE_URL)
 
