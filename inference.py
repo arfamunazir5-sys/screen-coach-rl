@@ -3,10 +3,10 @@ import json
 from openai import OpenAI
 from environment import DigitalCoachEnv, Action, Observation
 
-API_BASE_URL = os.environ.get("API_BASE_URL", "https://api.groq.com/openai/v1")
-MODEL_NAME = os.environ.get("MODEL_NAME", "llama-3.1-8b-instant")
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-HF_TOKEN = os.environ.get("HF_TOKEN", "")
+API_BASE_URL = os.getenv("API_BASE_URL", "https://api.groq.com/openai/v1")
+MODEL_NAME = os.getenv("MODEL_NAME", "llama-3.1-8b-instant")
+HF_TOKEN = os.getenv("HF_TOKEN")
+LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME")
 client = OpenAI(api_key=OPENAI_API_KEY, base_url=API_BASE_URL)
 
 VALID_ACTIONS = ["send_reminder", "block_app", "encourage", "do_nothing"]
