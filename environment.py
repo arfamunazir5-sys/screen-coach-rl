@@ -48,7 +48,7 @@ class DigitalCoachEnv:
         self.step_count += 1
         obs, reward_val, reason = self._apply_action(action)
         self.habit_history.append(self.state_data["screen_time_today"])
-        done = self.step_count >= self.max_steps
+        done = self.step_count >= self.max_steps or self.state_data["screen_time_today"] < 1.0
         reward = Reward(value=reward_val, reason=reason)
         info = {"step": self.step_count}
         return obs, reward, done, info
