@@ -1,13 +1,13 @@
 import os
 from openai import OpenAI
 from environment import DigitalCoachEnv, Action, Observation
-print("New file running")
+
 API_BASE_URL = os.getenv("API_BASE_URL", "https://api.groq.com/openai/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "llama-3.1-8b-instant")
 API_KEY = os.getenv("HF_TOKEN") or os.getenv("API_KEY")
 
 client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
-print("API KEY : ",API_KEY)
+
 VALID_ACTIONS = ["send_reminder", "block_app", "encourage", "do_nothing"]
 
 def get_agent_action(observation: dict) -> str:
