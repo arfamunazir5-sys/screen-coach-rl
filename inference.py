@@ -5,16 +5,11 @@ from environment import DigitalCoachEnv, Action, Observation
 API_BASE_URL = os.getenv("API_BASE_URL", "https://api.groq.com/openai/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "llama-3.1-8b-instant")
 HF_TOKEN = os.getenv("HF_TOKEN")
-API_KEY = HF_TOKEN or os.getenv("API_KEY")
-```
 
-Keep `API_KEY` for passing to the client, but `HF_TOKEN` must exist as its own variable.
+client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
 
----
-
-client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
-LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME")
 VALID_ACTIONS = ["send_reminder", "block_app", "encourage", "do_nothing"]
+
 
 def get_agent_action(observation: dict) -> str:
     prompt = f"""You are a digital behavior coach AI agent.
@@ -54,43 +49,49 @@ def run_episode(task_name: str, scenario_override: dict = None):
 
     rewards = []
     step_num = 0
-    
+    score = 0.0
+    success = False
+
     print(f"[START] task={task_name} env=screen-coach-rl model={MODEL_NAME}", flush=True)
 
-    while True:
-        action_type = get_agent_action(obs.model_dump())
-        action = Action(action_type=action_type)
+    try:
+        while True:
+            action_type = get_agent_action(obs.model_dump())
+            action = Action(action_type=action_type)
 
-        result = env.step(action)
-        obs, reward, done, info = result
+            result = env.step(action)
+            obs, reward, done, info = result
 
-        step_num += 1
-        reward_val = reward.value if reward else 0.0
-        rewards.append(reward_val)
+            step_num += 1
+            reward_val = reward.value if reward else 0.0
+            rewards.append(reward_val)
 
-        done_val = str(done).lower()
+            done_val = str(done).lower()
 
+            print(
+                f"[STEP] step={step_num} action={action_type} reward={reward_val:.2f} done={done_val} error=null",
+                flush=True
+            )
+
+            if done:
+                break
+
+        total_reward = sum(rewards)
+        max_possible = len(rewards) * 1.0
+        score = total_reward / max_possible if max_possible > 0 else 0.0
+        score = min(max(score, 0.0), 1.0)
+        success = score > 0.1
+
+    finally:
+        rewards_str = ",".join(f"{r:.2f}" for r in rewards)
         print(
-            f"[STEP] step={step_num} action={action_type} reward={reward_val:.2f} done={done_val} error=null",
+            f"[END] success={str(success).lower()} steps={step_num} score={score:.2f} rewards={rewards_str}",
             flush=True
         )
 
-        if done:
-            break
-
-    total_reward = sum(rewards)
-    score = total_reward / len(rewards) if rewards else 0.0
-    score = min(max(score, 0.0), 1.0)
-
-    success = score > 0.1
-    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
-
-    print(
-        f"[END] success={str(success).lower()} steps={step_num} score={score:.3f} rewards={rewards_str}",
-        flush=True
-    )
-
     return score
+
+
 if __name__ == "__main__":
     tasks = [
         ("easy",   {"screen_time_today": 5.5, "user_goal": "balance", "hour_of_day": 15}),
