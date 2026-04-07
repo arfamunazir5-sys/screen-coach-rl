@@ -34,7 +34,7 @@ def task_easy() -> float:
     actions = ["send_reminder", "send_reminder", "encourage"]
 
     def success(total_reward, steps, final_state):
-        return min(1.0, total_reward / (steps * 0.6))
+    return min(1.0, max(0.0, total_reward / steps))
 
     return run_task("Easy: Reminder Task", scenario, actions, success)
 
