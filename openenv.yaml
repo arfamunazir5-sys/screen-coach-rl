@@ -10,28 +10,38 @@ observation_space:
   properties:
     hour_of_day:
       type: integer
+      description: Current hour of the day (0-23)
     screen_time_today:
       type: number
+      description: Hours of screen use today
     app_category:
       type: string
+      description: Type of app being used (social|work|entertainment)
     user_goal:
       type: string
+      description: User stated goal (focus|sleep|balance)
     streak_days:
       type: integer
+      description: Consecutive days of good behavior
     last_action_effect:
       type: string
+      description: Result of last action taken
     resistance_level:
       type: number
+      description: How likely user is to ignore interventions (0.0-1.0)
     habit_score:
       type: number
+      description: Overall habit health score (0.0-1.0)
 
 action_space:
   type: object
   properties:
     action_type:
       type: string
+      description: One of send_reminder|block_app|encourage|do_nothing
     message:
       type: string
+      description: Optional message to accompany the action
 
 reward_range: [0.0, 1.0]
 
