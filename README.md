@@ -59,3 +59,16 @@ before deploying to real users.
 ```bash
 pip install -r requirements.txt
 python main.py
+
+## Baseline Scores
+| Task | Difficulty | Score |
+|---|---|---|
+| easy | Easy | 0.33 |
+| medium | Medium | 0.88 |
+| hard | Hard | 0.86 |
+
+## Run Inference
+```bash
+export HF_TOKEN=your_groq_key
+python inference.py
+```
