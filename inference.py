@@ -4,10 +4,16 @@ from environment import DigitalCoachEnv, Action, Observation
 
 API_BASE_URL = os.getenv("API_BASE_URL", "https://api.groq.com/openai/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "llama-3.1-8b-instant")
-API_KEY = os.getenv("HF_TOKEN") or os.getenv("API_KEY")
+HF_TOKEN = os.getenv("HF_TOKEN")
+API_KEY = HF_TOKEN or os.getenv("API_KEY")
+```
+
+Keep `API_KEY` for passing to the client, but `HF_TOKEN` must exist as its own variable.
+
+---
 
 client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
-
+LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME")
 VALID_ACTIONS = ["send_reminder", "block_app", "encourage", "do_nothing"]
 
 def get_agent_action(observation: dict) -> str:
