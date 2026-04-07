@@ -88,12 +88,7 @@ if __name__ == "__main__":
         "medium": task_medium(),
         "hard": task_hard()
     }
-    if __name__ == "__main__":
-        scores = {
-            "easy": task_easy(),
-            "medium": task_medium(),
-            "hard": task_hard()
-    }
+    
     print("=== GRADER RESULTS ===")
     for k, v in scores.items():
         print(f"  {k}: {v:.2f}")
