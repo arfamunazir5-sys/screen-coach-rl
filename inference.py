@@ -2,8 +2,8 @@ import os
 from openai import OpenAI
 from environment import DigitalCoachEnv, Action, Observation
 
-API_BASE_URL = os.getenv("API_BASE_URL", "https://api.groq.com/openai/v1")
-MODEL_NAME = os.getenv("MODEL_NAME", "llama-3.1-8b-instant")
+API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
+MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3.1-8B-Instruct")
 HF_TOKEN = os.getenv("HF_TOKEN")
 
 client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
@@ -76,8 +76,9 @@ def run_episode(task_name: str, scenario_override: dict = None):
             if done:
                 break
 
+        MAX_REWARD_PER_STEP = 1.0
         total_reward = sum(rewards)
-        max_possible = len(rewards) * 1.0
+        max_possible = len(rewards) * MAX_REWARD_PER_STEP 
         score = total_reward / max_possible if max_possible > 0 else 0.0
         score = min(max(score, 0.0), 1.0)
         success = score > 0.1
