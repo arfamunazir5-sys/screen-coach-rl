@@ -1,4 +1,6 @@
 from environment import DigitalCoachEnv, Action
+import random
+random.seed(42)
 
 def run_task(task_name: str, scenario: dict, actions: list, success_fn) -> float:
     env = DigitalCoachEnv()
@@ -34,7 +36,7 @@ def task_easy() -> float:
     actions = ["send_reminder", "send_reminder", "encourage"]
 
     def success(total_reward, steps, final_state):
-    return min(1.0, max(0.0, total_reward / steps))
+        return min(1.0, max(0.0, total_reward / steps))
 
     return run_task("Easy: Reminder Task", scenario, actions, success)
 
