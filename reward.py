@@ -51,4 +51,5 @@ def calculate_reward(screen_time, action_type, goal, hour, streak, resistance, c
     if screen_time > 8.0 and action_type in ["block_app", "send_reminder"]:
         base = min(1.0, base + 0.15)
 
+    base = base * (1 - resistance * 0.3)
     return round(base, 2)
