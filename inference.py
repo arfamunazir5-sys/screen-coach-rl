@@ -9,11 +9,68 @@ HF_TOKEN = os.getenv("HF_TOKEN")
 client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
 
 VALID_ACTIONS = ["send_reminder", "block_app", "encourage", "do_nothing"]
-
-
 def get_agent_action(observation: dict) -> str:
+    screen_time = observation["screen_time_today"]
+    hour = observation["hour_of_day"]
+    goal = observation["user_goal"]
+    streak = observation["streak_days"]
+    last = observation["last_action_effect"]
+
+    # 🌙 Late night sleep → aggressive intervention
+    if hour >= 22 and goal == "sleep":
+        if screen_time > 5:
+            return "block_app"
+        return "send_reminder"
+
+    # 🔥 Very high usage → block first
+    if screen_time > 7:
+        if last != "app_blocked":
+            return "block_app"
+        return "send_reminder"
+
+    # ⚖️ Moderate usage → controlled alternation
+    if screen_time > 4:
+        if last == "reminder_sent":
+            return "encourage"
+        return "send_reminder"
+
+    # 🧠 Low usage → don't interfere much
+    if screen_time < 2:
+        if last != "no_action":
+            return "do_nothing"
+        return "encourage"
+
+    # 💪 Good streak → occasional encouragement only
+    if streak > 4:
+        if last != "encouraged":
+            return "encourage"
+        return "do_nothing"
+
+    # 🔁 fallback balanced behavior
+    if last == "reminder_sent":
+        return "encourage"
+    if last == "encouraged":
+        return "send_reminder"
+
     return "send_reminder"
-    
+
+    # 💪 Strong streak (but DON'T spam encourage)
+    if streak > 5:
+        if last != "encouraged":
+            return "encourage"
+        return "do_nothing"
+
+    # 🧠 Low usage → mostly leave user alone
+    if screen_time < 2:
+        return "do_nothing"
+
+    # 🟡 Balanced zone
+    if last == "encouraged":
+        return "do_nothing"
+    if last == "reminder_sent":
+        return "encourage"
+
+    return "send_reminder"
 def run_episode(task_name: str, scenario_override: dict = None):
     env = DigitalCoachEnv()
     obs = env.reset()
@@ -34,17 +91,14 @@ def run_episode(task_name: str, scenario_override: dict = None):
             action_type = get_agent_action(obs.model_dump())
             action = Action(action_type=action_type)
 
-            result = env.step(action)
-            obs, reward, done, info = result
+            obs, reward, done, info = env.step(action)
 
             step_num += 1
             reward_val = reward.value if reward else 0.0
             rewards.append(reward_val)
 
-            done_val = str(done).lower()
-
             print(
-                f"[STEP] step={step_num} action={action_type} reward={reward_val:.2f} done={done_val} error=null",
+                f"[STEP] step={step_num} action={action_type} reward={reward_val:.2f} done={str(done).lower()} error=null",
                 flush=True
             )
 
@@ -53,7 +107,8 @@ def run_episode(task_name: str, scenario_override: dict = None):
 
         MAX_REWARD_PER_STEP = 1.0
         total_reward = sum(rewards)
-        max_possible = len(rewards) * MAX_REWARD_PER_STEP 
+        max_possible = len(rewards) * MAX_REWARD_PER_STEP
+
         score = total_reward / max_possible if max_possible > 0 else 0.0
         score = min(max(score, 0.0), 1.0)
         success = score > 0.1
