@@ -12,32 +12,7 @@ VALID_ACTIONS = ["send_reminder", "block_app", "encourage", "do_nothing"]
 
 
 def get_agent_action(observation: dict) -> str:
-    prompt = f"""You are a digital behavior coach AI agent.
-
-Current user state:
-{observation}
-
-Choose ONE action to help this user build healthier digital habits.
-Valid actions: {VALID_ACTIONS}
-
-Reply with ONLY the action name, nothing else."""
-
-    try:
-        response = client.chat.completions.create(
-            model=MODEL_NAME,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=20,
-            temperature=0.7
-        )
-        action = (response.choices[0].message.content or "").strip().lower()
-    except Exception:
-        action = "send_reminder"
-
-    if action not in VALID_ACTIONS:
-        action = "send_reminder"
-
-    return action
-
+    return "send_reminder"
 
 def run_episode(task_name: str, scenario_override: dict = None):
     env = DigitalCoachEnv()
