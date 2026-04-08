@@ -3,6 +3,7 @@ import random
 random.seed(42)
 
 def run_task(task_name: str, scenario: dict, actions: list, success_fn) -> float:
+    random.seed(42)
     env = DigitalCoachEnv()
     env.reset()
     env.state_data.update(scenario)
