@@ -13,7 +13,7 @@ VALID_ACTIONS = ["send_reminder", "block_app", "encourage", "do_nothing"]
 
 def get_agent_action(observation: dict) -> str:
     return "send_reminder"
-
+    
 def run_episode(task_name: str, scenario_override: dict = None):
     env = DigitalCoachEnv()
     obs = env.reset()
