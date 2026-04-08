@@ -61,44 +61,6 @@ Reply with ONLY one of: send_reminder, block_app, encourage, do_nothing"""
     if streak > 4:
         return "encourage" if last != "encouraged" else "do_nothing"
     return "send_reminder"
-
-    # 🧠 Low usage → don't interfere much
-    if screen_time < 2:
-        if last != "no_action":
-            return "do_nothing"
-        return "encourage"
-
-    # 💪 Good streak → occasional encouragement only
-    if streak > 4:
-        if last != "encouraged":
-            return "encourage"
-        return "do_nothing"
-
-    # 🔁 fallback balanced behavior
-    if last == "reminder_sent":
-        return "encourage"
-    if last == "encouraged":
-        return "send_reminder"
-
-    return "send_reminder"
-
-    # 💪 Strong streak (but DON'T spam encourage)
-    if streak > 5:
-        if last != "encouraged":
-            return "encourage"
-        return "do_nothing"
-
-    # 🧠 Low usage → mostly leave user alone
-    if screen_time < 2:
-        return "do_nothing"
-
-    # 🟡 Balanced zone
-    if last == "encouraged":
-        return "do_nothing"
-    if last == "reminder_sent":
-        return "encourage"
-
-    return "send_reminder"
 def run_episode(task_name: str, scenario_override: dict = None):
     env = DigitalCoachEnv()
     obs = env.reset()
