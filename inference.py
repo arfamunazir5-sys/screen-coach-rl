@@ -16,23 +16,51 @@ def get_agent_action(observation: dict) -> str:
     streak = observation["streak_days"]
     last = observation["last_action_effect"]
 
-    # 🌙 Late night sleep → aggressive intervention
+    prompt = f"""You are a digital behavior coach AI. Based on the user's current state, choose ONE action.
+
+Current state:
+- Screen time today: {screen_time} hours
+- Hour of day: {hour} (0=midnight, 22=10pm)
+- User goal: {goal}
+- Streak days: {streak}
+- Last action effect: {last}
+
+Available actions: send_reminder, block_app, encourage, do_nothing
+
+Rules:
+- block_app for very high usage (>7h) or late night + sleep goal
+- send_reminder for moderate usage (4-7h)
+- encourage when streak is good (>4 days) and usage is low
+- do_nothing when usage is healthy (<2h)
+
+Reply with ONLY one of: send_reminder, block_app, encourage, do_nothing"""
+
+    try:
+        completion = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=20,
+            temperature=0.0,
+        )
+        raw = completion.choices[0].message.content.strip().lower()
+        for action in VALID_ACTIONS:
+            if action in raw:
+                return action
+    except Exception as e:
+        print(f"[DEBUG] LLM call failed: {e}", flush=True)
+
+    # Fallback logic if LLM fails
     if hour >= 22 and goal == "sleep":
-        if screen_time > 5:
-            return "block_app"
-        return "send_reminder"
-
-    # 🔥 Very high usage → block first
+        return "block_app" if screen_time > 5 else "send_reminder"
     if screen_time > 7:
-        if last != "app_blocked":
-            return "block_app"
-        return "send_reminder"
-
-    # ⚖️ Moderate usage → controlled alternation
+        return "block_app"
     if screen_time > 4:
-        if last == "reminder_sent":
-            return "encourage"
-        return "send_reminder"
+        return "send_reminder" if last != "reminder_sent" else "encourage"
+    if screen_time < 2:
+        return "do_nothing"
+    if streak > 4:
+        return "encourage" if last != "encouraged" else "do_nothing"
+    return "send_reminder"
 
     # 🧠 Low usage → don't interfere much
     if screen_time < 2:
