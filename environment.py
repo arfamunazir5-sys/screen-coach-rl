@@ -1,46 +1,65 @@
+"""
+environment.py — Digital Behavior Coach RL Environment
+=======================================================
+Implements the OpenEnv interface:
+  - Typed Pydantic models: Observation, Action, Reward
+  - reset()  → Observation
+  - step()   → (Observation, Reward, done, info)
+  - state()  → dict
+"""
+
 from pydantic import BaseModel
 from typing import Optional
 import random
 
+
 class Observation(BaseModel):
-    hour_of_day: int
-    screen_time_today: float
-    app_category: str
-    user_goal: str
-    streak_days: int
+    hour_of_day:        int
+    screen_time_today:  float
+    app_category:       str
+    user_goal:          str
+    streak_days:        int
     last_action_effect: str
-    resistance_level: float
-    habit_score: float
+    resistance_level:   float
+    habit_score:        float
+
 
 class Action(BaseModel):
     action_type: str
-    message: Optional[str] = ""
+    message:     Optional[str] = ""
+
 
 class Reward(BaseModel):
-    value: float
+    value:  float
     reason: str
+
 
 class DigitalCoachEnv:
     def __init__(self):
-        self.state_data = {}
-        self.step_count = 0
-        self.max_steps = 20
-        self.consecutive_reminders = 0
-        self.habit_history = []
+        self.state_data:             dict  = {}
+        self.step_count:             int   = 0
+        self.max_steps:              int   = 20
+        self.consecutive_reminders:  int   = 0
+        self.habit_history:          list  = []
+
+    # ── OpenEnv interface ───────────────────────────────────────────────────────
 
     def reset(self) -> Observation:
-        self.step_count = 0
+        self.step_count            = 0
         self.consecutive_reminders = 0
-        past_avg = sum(self.habit_history[-7:]) / len(self.habit_history[-7:]) if self.habit_history else 4.0
+        past_avg = (
+            sum(self.habit_history[-7:]) / len(self.habit_history[-7:])
+            if self.habit_history else 4.0
+        )
         self.state_data = {
-            "hour_of_day": random.randint(8, 22),
-            "screen_time_today": round(min(12.0, past_avg + random.uniform(-1.0, 1.0)), 1),
-            "app_category": random.choice(["social", "entertainment", "work"]),
-            "user_goal": random.choice(["focus", "sleep", "balance"]),
-            "streak_days": random.randint(0, 7),
+            "hour_of_day":        random.randint(8, 22),
+            "screen_time_today":  round(min(12.0, past_avg + random.uniform(-1.0, 1.0)), 1),
+            "app_category":       random.choice(["social", "entertainment", "work"]),
+            "user_goal":          random.choice(["focus", "sleep", "balance"]),
+            "streak_days":        random.randint(0, 7),
             "last_action_effect": "none",
-            "resistance_level": round(random.uniform(0.0, 0.3), 2),
-            "habit_score": round(max(0.0, 1.0 - (past_avg / 12.0)), 2)
+            "resistance_level":   round(random.uniform(0.0, 0.3), 2),
+            "habit_score":        round(max(0.0, 1.0 - (past_avg / 12.0)), 2),
         }
         return Observation(**self.state_data)
 
@@ -48,28 +67,29 @@ class DigitalCoachEnv:
         self.step_count += 1
         obs, reward_val, reason = self._apply_action(action)
         self.habit_history.append(self.state_data["screen_time_today"])
-        done = self.step_count >= self.max_steps or self.state_data["screen_time_today"] < 1.0
+        done   = self.step_count >= self.max_steps
         reward = Reward(value=reward_val, reason=reason)
-        info = {"step": self.step_count}
+        info   = {"step": self.step_count}
         return obs, reward, done, info
 
     def state(self) -> dict:
         return self.state_data
 
+    # ── Internal reward logic ───────────────────────────────────────────────────
+
     def _apply_action(self, action: Action):
-        hour = self.state_data["hour_of_day"]
+        hour        = self.state_data["hour_of_day"]
         screen_time = self.state_data["screen_time_today"]
-        goal = self.state_data["user_goal"]
-        resistance = self.state_data["resistance_level"]
-        streak = self.state_data["streak_days"]
-        reward = 0.0
-        reason = ""
+        goal        = self.state_data["user_goal"]
+        resistance  = self.state_data["resistance_level"]
+        streak      = self.state_data["streak_days"]
+        reward      = 0.0
+        reason      = ""
 
-        ignored = random.random() < resistance
-
-        is_work_hours = 9 <= hour <= 17
-        is_late_night = hour >= 22
-        is_evening = 18 <= hour <= 21
+        ignored        = random.random() < resistance
+        is_work_hours  = 9 <= hour <= 17
+        is_late_night  = hour >= 22
+        is_evening     = 18 <= hour <= 21
 
         if action.action_type == "send_reminder":
             self.consecutive_reminders += 1
@@ -103,7 +123,7 @@ class DigitalCoachEnv:
                 reason = "Block attempt resisted"
             elif screen_time > 7.0:
                 self.state_data["screen_time_today"] = max(0, screen_time - 1.5)
-                self.state_data["resistance_level"] = max(0.0, resistance - 0.05)
+                self.state_data["resistance_level"]  = max(0.0, resistance - 0.05)
                 reward = 0.9
                 reason = "App blocked during very heavy usage"
             elif screen_time > 5.0:
@@ -118,13 +138,13 @@ class DigitalCoachEnv:
         elif action.action_type == "encourage":
             self.consecutive_reminders = 0
             if streak > 7:
-                self.state_data["streak_days"] += 1
-                self.state_data["resistance_level"] = max(0.0, resistance - 0.1)
+                self.state_data["streak_days"]        += 1
+                self.state_data["resistance_level"]    = max(0.0, resistance - 0.1)
                 reward = 0.9
                 reason = "Excellent streak reinforced"
             elif streak > 4:
-                self.state_data["streak_days"] += 1
-                self.state_data["resistance_level"] = max(0.0, resistance - 0.07)
+                self.state_data["streak_days"]        += 1
+                self.state_data["resistance_level"]    = max(0.0, resistance - 0.07)
                 reward = 0.75
                 reason = "Good streak reinforced"
             elif streak > 1:
@@ -152,20 +172,22 @@ class DigitalCoachEnv:
                 reason = "Did nothing during high usage — missed opportunity"
             self.state_data["last_action_effect"] = "no_action"
 
+        # Contextual bonuses
         if is_late_night and goal == "sleep" and action.action_type != "do_nothing":
-            reward = min(1.0, reward + 0.2)
+            reward  = min(1.0, reward + 0.2)
             reason += " + late night sleep bonus"
 
         if is_evening and goal == "balance" and action.action_type == "send_reminder":
-            reward = min(1.0, reward + 0.1)
+            reward  = min(1.0, reward + 0.1)
             reason += " + evening balance bonus"
 
         if screen_time > 8.0 and action.action_type in ["block_app", "send_reminder"]:
-            reward = min(1.0, reward + 0.15)
+            reward  = min(1.0, reward + 0.15)
             reason += " + critical usage intervention bonus"
 
-        self.state_data["hour_of_day"] = min(23, hour + 1)
-        self.state_data["habit_score"] = round(max(0.0, 1.0 - (self.state_data["screen_time_today"] / 12.0)), 2)
+        # Advance time and update habit score
+        self.state_data["hour_of_day"]   = min(23, hour + 1)
+        self.state_data["habit_score"]   = round(
+            max(0.0, 1.0 - (self.state_data["screen_time_today"] / 12.0)), 2
+        )
         return Observation(**self.state_data), round(reward, 2), reason
-
-env = DigitalCoachEnv()
