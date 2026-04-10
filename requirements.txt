@@ -5,3 +5,5 @@ openai
 huggingface_hub
 PyYAML
 openenv-core
+gradio==4.44.1
+plotly
