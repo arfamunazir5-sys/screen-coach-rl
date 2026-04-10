@@ -9,4 +9,6 @@ COPY . .
 
 EXPOSE 7860
 
+ENV PORT=7860
+
 CMD ["python", "app.py"]
