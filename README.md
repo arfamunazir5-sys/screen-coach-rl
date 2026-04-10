@@ -5,6 +5,7 @@ emoji: 🧠
 colorFrom: blue
 colorTo: green
 sdk: docker
+app_file: app.py
 pinned: false
 tags:
 
@@ -74,28 +75,22 @@ before deploying to real users.
 |`/reset`|POST  |Reset environment, returns initial observation|
 |`/step` |POST  |Take an action, returns obs/reward/done/info  |
 |`/state`|GET   |Get current environment state                 |
+|`/ui`   |GET   |Interactive visual demo                       |
 
 ## Setup & Usage
 
-### Install dependencies
-
 ```bash
 pip install -r requirements.txt
-```
-
-### Run the server
-
-```bash
 python app.py
 ```
 
-### Run grader (reproducible scores)
+## Run Grader
 
 ```bash
 python grader.py
 ```
 
-### Run inference
+## Run Inference
 
 ```bash
 export API_BASE_URL=https://router.huggingface.co/v1
@@ -104,7 +99,7 @@ export HF_TOKEN=your_token_here
 python inference.py
 ```
 
-### Docker
+## Docker
 
 ```bash
 docker build -t screen-coach-rl .
