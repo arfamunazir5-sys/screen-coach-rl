@@ -5,4 +5,3 @@ openai
 huggingface_hub
 PyYAML
 openenv-core>=0.2.0
-plotly
