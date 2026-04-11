@@ -324,7 +324,13 @@ with gr.Blocks(
 # FastAPI endpoints /reset /step /state still work because they're registered
 # on the `api` FastAPI app which is mounted BEFORE gradio takes over
 # ──────────────────────────────────────────────────────────────────────────────
-app = gr.mount_gradio_app(api, demo, path="/")
+from fastapi.responses import RedirectResponse
+
+@api.get("/")
+def root_redirect():
+    return RedirectResponse(url="/ui")
+
+app = gr.mount_gradio_app(api, demo, path="/ui")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=7860)
