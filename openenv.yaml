@@ -5,6 +5,11 @@ description: >
   toward healthier digital habits. The agent observes screen usage
   patterns and takes actions to optimize long-term wellbeing.
 
+server:
+  path: server/app.py
+  host: 0.0.0.0
+  port: 7860
+
 observation_space:
   type: object
   properties:
