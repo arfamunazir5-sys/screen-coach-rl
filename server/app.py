@@ -1,13 +1,7 @@
-"""
-server/app.py — OpenEnv FastAPI server (required by openenv validate)
-Exposes /reset, /step, /state endpoints for the OpenEnv validator.
-"""
-
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Optional
-import uvicorn
 import sys
 import os
 
@@ -23,7 +17,7 @@ env.reset()
 
 class ActionRequest(BaseModel):
     action_type: Optional[str] = "do_nothing"
-    message:     Optional[str] = ""
+    message: Optional[str] = ""
 
 
 @app.get("/")
@@ -45,9 +39,9 @@ def step(action: ActionRequest):
         )
         return JSONResponse(content={
             "observation": obs.model_dump(),
-            "reward":      reward.model_dump(),
-            "done":        done,
-            "info":        info,
+            "reward": reward.model_dump(),
+            "done": done,
+            "info": info,
         })
     except Exception:
         env.reset()
@@ -56,9 +50,9 @@ def step(action: ActionRequest):
         )
         return JSONResponse(content={
             "observation": obs.model_dump(),
-            "reward":      reward.model_dump(),
-            "done":        done,
-            "info":        info,
+            "reward": reward.model_dump(),
+            "done": done,
+            "info": info,
         })
 
 
@@ -68,4 +62,5 @@ def state():
 
 
 if __name__ == "__main__":
+    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=7860)
