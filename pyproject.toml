@@ -9,13 +9,15 @@ description = "Digital Behavior Coach OpenEnv Environment"
 requires-python = ">=3.10"
 dependencies = [
     "fastapi",
-    "uvicorn",
+    "uvicorn[standard]",
     "pydantic",
     "openai",
     "huggingface_hub",
     "PyYAML",
     "openenv-core>=0.2.0",
+    "gradio==5.23.3",
+    "plotly",
 ]
 
 [project.scripts]
-server = "server.app:main"
+server = "server.app:app"
