@@ -57,10 +57,9 @@ def state():
 def health():
     return {"status": "ok"}
 
-@app.get("/")
-def root_redirect():
+@app.get("/ui-redirect")
+def ui_redirect():
     return RedirectResponse(url="/ui")
-
 # ── Gradio UI ─────────────────────────────────────────────────────────────────
 _ui_env = DigitalCoachEnv()
 _history = []
