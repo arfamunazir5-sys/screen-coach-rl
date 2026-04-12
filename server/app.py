@@ -201,7 +201,8 @@ button.primary { background: linear-gradient(135deg, #1e3a5f, #0d2847) !importan
 """
 
 with gr.Blocks(theme=gr.themes.Base(primary_hue="blue", neutral_hue="slate"),
-               css=CSS, title="Digital Behavior Coach") as demo:
+    css=CSS, title="Digital Behavior Coach") as demo:
+    gr.JSON(value={"status": "ok"})
     gr.Markdown("# 🧠 Digital Behavior Coach\n**OpenEnv RL Environment** — An AI that coaches users toward healthier screen habits.")
     with gr.Row():
         reset_btn = gr.Button("⟳  Reset Environment", variant="primary", size="lg", scale=1)
