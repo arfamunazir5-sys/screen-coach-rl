@@ -227,7 +227,23 @@ with gr.Blocks(theme=gr.themes.Base(primary_hue="blue", neutral_hue="slate"),
     btn_n.click(lambda: take_action("do_nothing"),    outputs=_out)
 
 # Mount Gradio into FastAPI
-app = gr.mount_gradio_app(app, demo, path="/ui")
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+import gradio as gr
+
+main_app = FastAPI()
+
+@main_app.get("/")
+def root():
+    return {"status": "ok"}
+
+# mount your existing app under /api
+main_app.mount("/api", app)
+
+# mount gradio separately
+main_app = gr.mount_gradio_app(main_app, demo, path="/ui")
+
+app = main_app
 
 def main():
     uvicorn.run("server.app:app", host="0.0.0.0", port=int(os.getenv("PORT", "7860")))
