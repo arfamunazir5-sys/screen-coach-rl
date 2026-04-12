@@ -1,6 +1,5 @@
 name: digital-behavior-coach
 version: "1.0.0"
-app: server.app:app
 description: >
   A reinforcement learning environment that simulates coaching a user
   toward healthier digital habits. The agent observes screen usage
