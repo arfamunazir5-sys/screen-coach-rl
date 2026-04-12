@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Optional
 from environment import DigitalCoachEnv, Action
+import uvicorn
 
 app = FastAPI(title="Digital Behavior Coach")
 _env = DigitalCoachEnv()
@@ -58,8 +59,10 @@ def health():
     return {"status": "ok"}
 
 def main():
-    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", "7860")))
 
 if __name__ == "__main__":
     main()
+
+# Bind and start server when module is loaded by openenv validator
+main()
