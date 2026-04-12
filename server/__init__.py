@@ -1,1 +1,1 @@
-from .app import app, main
+# makes server a proper module
