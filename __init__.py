@@ -1,1 +1,1 @@
-ÿþ
+# makes server a proper module
